@@ -1,12 +1,14 @@
 {
-  "name": "budget-app",
+  "name": "budget-tracker",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "lite-server": "lite-server"
+    "watch": "nodemon server.js",
+    "lite-server": "lite-server",
+    "eslint": "eslint **/*.js --fix --ignore-pattern node_modules/"
   },
   "repository": {
     "type": "git",
@@ -23,6 +25,10 @@
     "express": "^4.17.1",
     "lite-server": "^2.5.3",
     "mongoose": "^5.5.15",
-    "morgan": "^1.9.1"
+    "morgan": "^1.9.1",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-jquery": "^1.5.1",
+    "eslint-plugin-prettier": "^3.1.4",
+    "prettier": "^2.0.5"
   }
 }
