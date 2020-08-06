@@ -1,4 +1,4 @@
-let transactions = [];
+zlet transactions = [];
 let myChart;
 
 fetch("/api/transaction")
