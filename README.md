@@ -23,13 +23,10 @@ This is a web application that allows users to track their budgets.
 
 ## Credits
 
-
+- [MongoDB](https://www.mongodb.com/)
 - [Bootstrap](https://getbootstrap.com/docs/4.5/getting-started/introduction/)
 - [Trilogy](https://www.trilogyed.com/)
 - [npm express](https://www.npmjs.com/package/express)
-
-- [MySQL](https://www.mysql.com/)
-
 - [jQuery](https://jquery.com/)
 
 ## License
