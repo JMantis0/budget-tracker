@@ -125,22 +125,31 @@ const callback = function() {
       value: amountEl.value,
       date: new Date().toISOString(),
     };
-
     // if subtracting funds, convert amount to negative number
     if (!isAdding) {
       transaction.value *= -1;
     }
 
+    // Add new transaction to indexedDB
+    console.log("new record created");
+    console.log("Adding new Transaction inside request.onsuccess")
+    const db = request.result;
+    const dbChange = db.transaction(["transaction"], "readwrite");
+    const transactionStore = dbChange.objectStore("transaction");
+    transactionStore.add(transaction);
+  
+
+
     // add to beginning of current array of data
     transactions.unshift(transaction);
-
+    console.log(transactions);
     // re-run logic to populate ui with new record
     populateChart();
     populateTable();
     populateTotal();
 
     // also send to server
-    fetch("/api/transaction", {
+    fetch("/api/transaction/new", {
       method: "POST",
       body: JSON.stringify(transaction),
       headers: {
