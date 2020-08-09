@@ -1,4 +1,12 @@
 const callback = function() {
+
+  const amountInput = document.querySelector("#amountInput");
+  const amountInputCharsAllowed = /[0-9\/]+/;
+  amountInput.addEventListener("keypress", event => {
+    if (!amountInputCharsAllowed.test(event.key)) {
+      event.preventDefault();
+    }
+  });
   // We request a database instance.
   const request = indexedDB.open("transactions", 1);
 
@@ -122,23 +130,36 @@ const callback = function() {
     // create record
     let transaction = {
       name: nameEl.value,
-      value: amountEl.value,
+      value: parseInt(amountEl.value),
       date: new Date().toISOString(),
     };
-
     // if subtracting funds, convert amount to negative number
     if (!isAdding) {
       transaction.value *= -1;
     }
 
+    console.log("new record created");
+    
     // add to beginning of current array of data
     transactions.unshift(transaction);
 
+    console.log(transactions.value, parseInt(transactions.value))
+    // Parseint before placing in indexedDB
+    transactions.value = parseInt(transaction.value);
+
+    console.log(transaction, "transaction just added to indexedDB");
+    // Add new transaction to indexedDB
+    console.log("Adding new Transaction inside request.onsuccess")
+    const db = request.result;
+    const dbChange = db.transaction(["transaction"], "readwrite");
+    const transactionStore = dbChange.objectStore("transaction");
+    transactionStore.add(transaction);
+    
     // re-run logic to populate ui with new record
     populateChart();
     populateTable();
     populateTotal();
-
+    
     // also send to server
     fetch("/api/transaction", {
       method: "POST",
@@ -178,6 +199,7 @@ const callback = function() {
     sendTransaction(false);
   };
 }
+
 
 if (
     document.readyState === "complete" ||
