@@ -130,26 +130,29 @@ const callback = function() {
       transaction.value *= -1;
     }
 
-    // Add new transaction to indexedDB
     console.log("new record created");
+    
+    // add to beginning of current array of data
+    transactions.unshift(transaction);
+
+    // Parseint before placing in indexedDB
+    transactions.value = parseInt(transaction.value);
+
+    console.log(transactions);
+    // Add new transaction to indexedDB
     console.log("Adding new Transaction inside request.onsuccess")
     const db = request.result;
     const dbChange = db.transaction(["transaction"], "readwrite");
     const transactionStore = dbChange.objectStore("transaction");
     transactionStore.add(transaction);
-  
-
-
-    // add to beginning of current array of data
-    transactions.unshift(transaction);
-    console.log(transactions);
+    
     // re-run logic to populate ui with new record
     populateChart();
     populateTable();
     populateTotal();
-
+    
     // also send to server
-    fetch("/api/transaction/", {
+    fetch("/api/transaction", {
       method: "POST",
       body: JSON.stringify(transaction),
       headers: {
