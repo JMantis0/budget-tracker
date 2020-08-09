@@ -149,7 +149,7 @@ const callback = function() {
     populateTotal();
 
     // also send to server
-    fetch("/api/transaction/new", {
+    fetch("/api/transaction/", {
       method: "POST",
       body: JSON.stringify(transaction),
       headers: {
