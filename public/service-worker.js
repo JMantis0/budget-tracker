@@ -61,7 +61,9 @@ self.addEventListener("fetch", function (evt) {
             .then((response) => {
               // If the response was good, clone it and store it in the cache.
               if (response.status === 200) {
-                cache.add(evt.request.url, response.clone());
+                console.log("Adding to cache: url - ", evt.request.url);
+                console.log(response);
+                cache.put(evt.request.url, response.clone());
               }
               return response;
             })
@@ -77,9 +79,9 @@ self.addEventListener("fetch", function (evt) {
   }
 
   //  Static files route through here.
-  // evt.respondWith(
-  //   caches.match(evt.request).then(function (response) {
-  //     return response || fetch(evt.request);
-  //   })
-  // );
+  evt.respondWith(
+    caches.match(evt.request).then(function (response) {
+      return response || fetch(evt.request);
+    })
+  );
 });

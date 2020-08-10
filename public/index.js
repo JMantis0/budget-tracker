@@ -2,12 +2,15 @@ const callback = function() {
   const nameEl = document.querySelector("#t-name");
   const amountEl = document.querySelector("#t-amount");
   const errorEl = document.querySelector(".form .error");
+
+  //  Only allow numerics in amount field
   const amountInputCharsAllowed = /[0-9\/]+/;
   amountEl.addEventListener("keypress", event => {
     if (!amountInputCharsAllowed.test(event.key)) {
       event.preventDefault();
     }
   });
+
   // We request a database instance.
   const request = indexedDB.open("transactions", 1);
 
@@ -30,15 +33,6 @@ const callback = function() {
       return response.json();
     })
     .then((data) => {
-
-      request.onsuccess = () => {
-        const db = request.result;
-        const dbChange = db.transaction(["transaction"], "readwrite");
-        const transactionStore = dbChange.objectStore("transaction");
-        data.forEach((transaction) => {
-          transactionStore.add({ name: transaction.name, value: transaction.value, date: transaction.date });
-        });
-      };
 
       // save db data on global variable
       transactions = data;
@@ -135,17 +129,8 @@ const callback = function() {
       transaction.value *= -1;
     }
 
-    
-    
     // add to beginning of current array of data
     transactions.unshift(transaction);
-    
-    // Add new transaction to indexedDB
-    
-    const db = request.result;
-    const dbChange = db.transaction(["transaction"], "readwrite");
-    const transactionStore = dbChange.objectStore("transaction");
-    transactionStore.add(transaction);
     
     // re-run logic to populate ui with new record
     populateChart();
@@ -175,12 +160,23 @@ const callback = function() {
       })
       .catch((err) => {
         // fetch failed, so save in indexed db
+        console.log("fetch failed, so save in indexed db")
         saveRecord(transaction);
 
         // clear form
         nameEl.value = "";
         amountEl.value = "";
       });
+  }
+
+  function saveRecord(transaction) {
+    request.onsuccess = () => {
+      const db = request.result;
+      const dbChange = db.transaction(["transaction"], "readwrite");
+      const transactionStore = dbChange.objectStore("transaction");
+      transactionStore.add({ name: transaction.name, value: transaction.value, date: transaction.date });
+    };
+    console.log(transaction, "Transaction saved to indexedDB");
   }
 
   document.querySelector("#add-btn").onclick = function () {
