@@ -22,9 +22,6 @@ const callback = function() {
     objectStore.createIndex("date", "date");
   };
 
-  // This returns a result that we can then manipulate.
-  
-
   let transactions = [];
   let myChart;
 
@@ -170,12 +167,10 @@ const callback = function() {
   }
 
   function saveRecord(transaction) {
-    request.onsuccess = () => {
       const db = request.result;
       const dbChange = db.transaction(["transaction"], "readwrite");
       const transactionStore = dbChange.objectStore("transaction");
       transactionStore.add({ name: transaction.name, value: transaction.value, date: transaction.date });
-    };
     console.log(transaction, "Transaction saved to indexedDB");
   }
 
