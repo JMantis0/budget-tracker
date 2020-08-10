@@ -8,8 +8,9 @@
   <link rel="shortcut icon" href="icons/icon-192x192.png" type="image/x-icon">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="index.js"></script>
   <link rel="stylesheet" href="styles.css">
-  <script src="index.js" type="application/javascript"></script>
+  
   <title>Budget Tracker</title>
 </head>
 <body>
@@ -20,7 +21,7 @@
 
     <div class="form">
       <input type="text" id="t-name" placeholder="Name of transaction" />
-      <input type="number" id="amountInput" min="0" id="t-amount" placeholder="Transaction amount" />
+      <input type="number" min="0" id="t-amount" placeholder="Transaction amount" />
       <button id="add-btn"><i class="fa fa-plus buttons"></i> Add Funds</button>
       <button id="sub-btn"><i class="fa fa-minus"></i> Subtract Funds</button>
       <p class="error"></p>
@@ -42,17 +43,15 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-  
   <script>
-        if ("serviceWorker" in navigator) {
-          window.addEventListener("load", () => {
-            navigator.serviceWorker.register("service-worker.js").then(reg => {
-              console.log("We found your service worker file!", reg);
-            });
-          });
-        }
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("service-worker.js").then(reg => {
+          console.log("We found your service worker file!", reg);
+        });
+      });
+    }
 
-  </script>
-
+</script>
 </body>
 </html>

@@ -1,8 +1,9 @@
 const callback = function() {
-
-  const amountInput = document.querySelector("#amountInput");
+  const nameEl = document.querySelector("#t-name");
+  const amountEl = document.querySelector("#t-amount");
+  const errorEl = document.querySelector(".form .error");
   const amountInputCharsAllowed = /[0-9\/]+/;
-  amountInput.addEventListener("keypress", event => {
+  amountEl.addEventListener("keypress", event => {
     if (!amountInputCharsAllowed.test(event.key)) {
       event.preventDefault();
     }
@@ -41,7 +42,6 @@ const callback = function() {
 
       // save db data on global variable
       transactions = data;
-      console.log(data)
       populateTotal();
       populateTable();
       populateChart();
@@ -115,9 +115,6 @@ const callback = function() {
   }
 
   function sendTransaction(isAdding) {
-    let nameEl = document.querySelector("#t-name");
-    let amountEl = document.querySelector("#t-amount");
-    let errorEl = document.querySelector(".form .error");
 
     // validate form
     if (nameEl.value === "" || amountEl.value === "") {
@@ -138,18 +135,13 @@ const callback = function() {
       transaction.value *= -1;
     }
 
-    console.log("new record created");
+    
     
     // add to beginning of current array of data
     transactions.unshift(transaction);
-
-    console.log(transactions.value, parseInt(transactions.value))
-    // Parseint before placing in indexedDB
-    transactions.value = parseInt(transaction.value);
-
-    console.log(transaction, "transaction just added to indexedDB");
+    
     // Add new transaction to indexedDB
-    console.log("Adding new Transaction inside request.onsuccess")
+    
     const db = request.result;
     const dbChange = db.transaction(["transaction"], "readwrite");
     const transactionStore = dbChange.objectStore("transaction");
