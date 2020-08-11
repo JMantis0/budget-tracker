@@ -1,4 +1,12 @@
 const callback = function () {
+  window.addEventListener('online', (event) => {
+    console.log("You are now connected to the network.");
+});
+
+window.addEventListener('offline', (event) => {
+  console.log("You are now disconnected from the network.");
+});
+
   var db;
   const nameEl = document.querySelector("#t-name");
   const amountEl = document.querySelector("#t-amount");
@@ -53,12 +61,8 @@ const callback = function () {
       const indexedRecords = await getIndexedRecords();
       console.log(indexedRecords, "IndexedDBRecords")
       console.log(transactions), "transactions";
-      transactions = [...transactions, ...indexedRecords].sort((a,b) =>{
-        if (a.date < b.date) {
-          return 1;
-        } else {
-          return -1;
-        }
+      transactions = [...transactions, ...indexedRecords].sort((a,b) => { 
+        return (a.date < b.date ? 1 : -1);
       });
       console.log("indexedDB entry pushed to data");
       console.log(transactions, "transactions");
