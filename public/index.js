@@ -30,7 +30,7 @@ const callback = function() {
     console.log("fetching on looad")
       return response.json();
     })
-    .then((data) => {
+    .then(async (data) => {
       console.log("inside fetchAll")
       // save db data on global variable
       transactions = data;
@@ -51,9 +51,12 @@ const callback = function() {
       }
       getIndexedRecords();
       console.log(transactions)
+      setTimeout(() => {
+      console.log("Just before populating ");
       populateTotal();
       populateTable();
       populateChart();
+      }, 5000 );
     });
 
   function populateTotal() {
