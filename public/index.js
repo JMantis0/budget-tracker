@@ -1,11 +1,10 @@
 const callback = function () {
-  window.addEventListener('online', (event) => {
-    console.log("You are now connected to the network.");
-});
 
-window.addEventListener('offline', (event) => {
-  console.log("You are now disconnected from the network.");
-});
+  const testdb = indexedDB.open("testDB", 2);
+  testdb.onsuccess = event => {
+    console.log(testdb.result);
+  }
+
 
   var db;
   const nameEl = document.querySelector("#t-name");
@@ -20,18 +19,21 @@ window.addEventListener('offline', (event) => {
     }
   });
 
+  window.addEventListener("offline", (event) => {
+    console.log("You are now disconnected from the network.");
+  });
   // We request a database instance.
   const request = indexedDB.open("transactions", 1);
 
-  request.onupgradeneeded = (event) => {
-    db = event.target.result;
-    const objectStore = db.createObjectStore("transaction", {
-      keyPath: "date",
-    });
-    objectStore.createIndex("name", "name");
-    objectStore.createIndex("value", "value");
-    objectStore.createIndex("date", "date");
-  };
+  // request.onupgradeneeded = (event) => {
+  //   db = event.target.result;
+  //   const objectStore = db.createObjectStore("transaction", {
+  //     keyPath: "date",
+  //   });
+  //   objectStore.createIndex("name", "name");
+  //   objectStore.createIndex("value", "value");
+  //   objectStore.createIndex("date", "date");
+  // };
 
   let transactions = [];
   let myChart;
@@ -46,32 +48,45 @@ window.addEventListener('offline', (event) => {
       // save db data on global variable
       transactions = data;
       //  Get any data in the indexedDB and add it to the transactions array
-      function getIndexedRecords() {
-        return new Promise(function (resolve) {
-          db = request.result;
-          const dbChange = db.transaction(["transaction"], "readwrite");
-          const transactionStore = dbChange.objectStore("transaction");
-          const getRequest = transactionStore.getAll();
-          getRequest.onsuccess = () => {
-            console.log(getRequest.result);
-            return resolve(getRequest.result);
-          };
-        });
-      }
       const indexedRecords = await getIndexedRecords();
-      console.log(indexedRecords, "IndexedDBRecords")
+      console.log(indexedRecords, "IndexedDBRecords");
       console.log(transactions), "transactions";
-      transactions = [...transactions, ...indexedRecords].sort((a,b) => { 
-        return (a.date < b.date ? 1 : -1);
+      transactions = [...transactions, ...indexedRecords].sort((a, b) => {
+        return a.date < b.date ? 1 : -1;
       });
       console.log("indexedDB entry pushed to data");
       console.log(transactions, "transactions");
-        console.log("Just before populating ");
-        populateTotal();
-        populateTable();
-        populateChart();
-
+      console.log("Just before populating ");
+      populateTotal();
+      populateTable();
+      populateChart();
     });
+
+  function getIndexedRecords() {
+    return new Promise(function (resolve) {
+      db = request.result;
+      const dbChange = db.transaction(["transaction"], "readwrite");
+      const transactionStore = dbChange.objectStore("transaction");
+      const getRequest = transactionStore.getAll();
+      getRequest.onsuccess = () => {
+        console.log(getRequest.result);
+        return resolve(getRequest.result);
+      };
+    });
+  }
+
+  function deleteIndexedRecords() {
+    return new Promise(function (resolve) {
+      db = request.result;
+      const dbDelete = db.transaction(["transaction"], "readwrite");
+      const transactionStore = dbDelete.objectStore("transaction");
+      const deleteRequest = transactionStore.clear();
+      deleteRequest.onsuccess = () => {
+        console.log(deleteRequest.result);
+        return resolve(deleteRequest.result);
+      };
+    });
+  }
 
   function populateTotal() {
     // reduce transaction amounts to a single total value
@@ -199,6 +214,26 @@ window.addEventListener('offline', (event) => {
         amountEl.value = "";
       });
   }
+
+  window.addEventListener("online", async (event) => {
+    console.log("You are now connected to the network.");
+    const indexedRecords = await getIndexedRecords();
+    fetch("/api/transaction/bulk", {
+      method: "POST",
+      body: JSON.stringify(indexedRecords),
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json",
+      },
+    })
+      .then(async (response) => {
+        console.log(response);
+        await deleteIndexedRecords();
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  });
 
   function saveRecord(transaction) {
     db = request.result;
