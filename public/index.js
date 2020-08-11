@@ -1,11 +1,12 @@
-const callback = function() {
+const callback = function () {
+  var db;
   const nameEl = document.querySelector("#t-name");
   const amountEl = document.querySelector("#t-amount");
   const errorEl = document.querySelector(".form .error");
 
   //  Only allow numerics in amount field
   const amountInputCharsAllowed = /[0-9\/]+/;
-  amountEl.addEventListener("keypress", event => {
+  amountEl.addEventListener("keypress", (event) => {
     if (!amountInputCharsAllowed.test(event.key)) {
       event.preventDefault();
     }
@@ -15,8 +16,10 @@ const callback = function() {
   const request = indexedDB.open("transactions", 1);
 
   request.onupgradeneeded = (event) => {
-    const db = event.target.result;
-    const objectStore = db.createObjectStore("transaction", { keyPath: "date"});
+    db = event.target.result;
+    const objectStore = db.createObjectStore("transaction", {
+      keyPath: "date",
+    });
     objectStore.createIndex("name", "name");
     objectStore.createIndex("value", "value");
     objectStore.createIndex("date", "date");
@@ -26,42 +29,49 @@ const callback = function() {
   let myChart;
 
   fetch("/api/transaction/fetchAll")
-  .then((response) => {
-    console.log("fetching on looad")
+    .then((response) => {
+      console.log("fetching on looad");
       return response.json();
     })
     .then(async (data) => {
-      console.log("inside fetchAll")
+      console.log("inside fetchAll");
       // save db data on global variable
       transactions = data;
       //  Get any data in the indexedDB and add it to the transactions array
       function getIndexedRecords() {
-        const db = request.result;
-        const dbChange = db.transaction(["transaction"], "readwrite");
-        const transactionStore = dbChange.objectStore("transaction");
-        const getRequest = transactionStore.getAll();
-        getRequest.onsuccess = () => {
-          console.log(getRequest.result);
-          getRequest.result.forEach((transaction) => {
-            console.log(transaction);
-            transactions.unshift(transaction);
-            console.log("indexedDB entry pushed to data")
-          });
-        }
+        return new Promise(function (resolve) {
+          db = request.result;
+          const dbChange = db.transaction(["transaction"], "readwrite");
+          const transactionStore = dbChange.objectStore("transaction");
+          const getRequest = transactionStore.getAll();
+          getRequest.onsuccess = () => {
+            console.log(getRequest.result);
+            return resolve(getRequest.result);
+          };
+        });
       }
-      getIndexedRecords();
-      console.log(transactions)
-      setTimeout(() => {
-      console.log("Just before populating ");
-      populateTotal();
-      populateTable();
-      populateChart();
-      }, 5000 );
+      const indexedRecords = await getIndexedRecords();
+      console.log(indexedRecords, "IndexedDBRecords")
+      console.log(transactions), "transactions";
+      transactions = [...transactions, ...indexedRecords].sort((a,b) =>{
+        if (a.date < b.date) {
+          return 1;
+        } else {
+          return -1;
+        }
+      });
+      console.log("indexedDB entry pushed to data");
+      console.log(transactions, "transactions");
+        console.log("Just before populating ");
+        populateTotal();
+        populateTable();
+        populateChart();
+
     });
 
   function populateTotal() {
     // reduce transaction amounts to a single total value
-    console.log(transactions)
+    console.log(transactions);
     let total = transactions.reduce((total, t) => {
       return total + parseInt(t.value);
     }, 0);
@@ -93,7 +103,6 @@ const callback = function() {
 
     // create date labels for chart
     let labels = reversed.map((t) => {
-
       let date = new Date(t.date);
       return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
     });
@@ -128,7 +137,6 @@ const callback = function() {
   }
 
   function sendTransaction(isAdding) {
-
     // validate form
     if (nameEl.value === "" || amountEl.value === "") {
       errorEl.textContent = "Missing Information";
@@ -150,12 +158,12 @@ const callback = function() {
 
     // add to beginning of current array of data
     transactions.unshift(transaction);
-    
+
     // re-run logic to populate ui with new record
     populateChart();
     populateTable();
     populateTotal();
-    
+
     // also send to server
     fetch("/api/transaction", {
       method: "POST",
@@ -179,7 +187,7 @@ const callback = function() {
       })
       .catch((err) => {
         // fetch failed, so save in indexed db
-        console.log("fetch failed, so save in indexed db")
+        console.log("fetch failed, so save in indexed db");
         saveRecord(transaction);
 
         // clear form
@@ -189,10 +197,14 @@ const callback = function() {
   }
 
   function saveRecord(transaction) {
-      const db = request.result;
-      const dbChange = db.transaction(["transaction"], "readwrite");
-      const transactionStore = dbChange.objectStore("transaction");
-      transactionStore.add({ name: transaction.name, value: transaction.value, date: transaction.date });
+    db = request.result;
+    const dbChange = db.transaction(["transaction"], "readwrite");
+    const transactionStore = dbChange.objectStore("transaction");
+    transactionStore.add({
+      name: transaction.name,
+      value: transaction.value,
+      date: transaction.date,
+    });
     console.log(transaction, "Transaction saved to indexedDB");
   }
 
@@ -203,14 +215,13 @@ const callback = function() {
   document.querySelector("#sub-btn").onclick = function () {
     sendTransaction(false);
   };
-}
-
+};
 
 if (
-    document.readyState === "complete" ||
-    (document.readyState !== "loading" && !document.documentElement.doScroll)
+  document.readyState === "complete" ||
+  (document.readyState !== "loading" && !document.documentElement.doScroll)
 ) {
-  console.log("callback")
+  console.log("callback");
   callback();
 } else {
   document.addEventListener("DOMContentLoaded", callback);
