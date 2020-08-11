@@ -63,7 +63,7 @@ self.addEventListener("fetch", function (evt) {
               if (response.status === 200) {
                 console.log("Adding to cache: url - ", evt.request.url);
                 console.log(response);
-                cache.put(evt.request.url, response.clone());
+                cache.add(evt.request.url, response.clone());
               }
               return response;
             })

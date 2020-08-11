@@ -25,14 +25,32 @@ const callback = function() {
   let transactions = [];
   let myChart;
 
-  fetch("/api/transaction")
-    .then((response) => {
+  fetch("/api/transaction/fetchAll")
+  .then((response) => {
+    console.log("fetching on looad")
       return response.json();
     })
     .then((data) => {
-
+      console.log("inside fetchAll")
       // save db data on global variable
       transactions = data;
+      //  Get any data in the indexedDB and add it to the transactions array
+      function getIndexedRecords() {
+        const db = request.result;
+        const dbChange = db.transaction(["transaction"], "readwrite");
+        const transactionStore = dbChange.objectStore("transaction");
+        const getRequest = transactionStore.getAll();
+        getRequest.onsuccess = () => {
+          console.log(getRequest.result);
+          getRequest.result.forEach((transaction) => {
+            console.log(transaction);
+            transactions.unshift(transaction);
+            console.log("indexedDB entry pushed to data")
+          });
+        }
+      }
+      getIndexedRecords();
+      console.log(transactions)
       populateTotal();
       populateTable();
       populateChart();
@@ -40,6 +58,7 @@ const callback = function() {
 
   function populateTotal() {
     // reduce transaction amounts to a single total value
+    console.log(transactions)
     let total = transactions.reduce((total, t) => {
       return total + parseInt(t.value);
     }, 0);
