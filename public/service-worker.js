@@ -47,7 +47,7 @@ self.addEventListener("activate", function (evt) {
 
   self.clients.claim();
 });
-
+ 
 // fetch
 self.addEventListener("fetch", function (evt) {
   // cache successful requests to the API
@@ -85,3 +85,6 @@ self.addEventListener("fetch", function (evt) {
     })
   );
 });
+
+
+console.log("End of serviceworker.js");
