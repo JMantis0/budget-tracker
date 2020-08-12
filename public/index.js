@@ -1,10 +1,36 @@
 const callback = function () {
+  //  Creating a second testDB to try and redo the indexedDB the right way and avoid the errors
+  //  I am currently getting with the request db
 
-  const testdb = indexedDB.open("testDB", 2);
-  testdb.onsuccess = event => {
-    console.log(testdb.result);
+  //  Here the variable for the actual db is initialized
+  var testDB;
+  //  Here the request is made to open an indexedDB
+  //  I believe this assigns a request object to testDBRequest
+  const testDBRequest = indexedDB.open("testDB", 1);
+  //  Once the request object resolves?? the onsuccess is fired and
+  //  The result is assigned to testDB.  Console logs provide info
+  testDBRequest.onsuccess = event => {
+    testDB = event.target.result;
+    console.log("onsuccess event", event);
+    console.log(testDBRequest.result);
+  }
+  // The onupgradeneeded event is triggered upon creation of a database by the open call.
+  testDBRequest.onupgradeneeded = (event) => {
+    console.log("onupgradeneeded event", event);
+    //  I am not exactly certain if this line is needed since testDB was assigned on line 13.
+    testDB = event.target.result;
+    //  Here the schema is set up.
+    const transactionStore = testDB.createObjectStore("transaction", {keyPath: "date"});
+    //  An index is created for date, allowing search by date, which is used later to sort the entries
+    transactionStore.createIndex("date", "date");
   }
 
+  //  Error handling
+  testDBRequest.onerror = (error) => {
+    console.log("There was an error ", error);
+  }
+
+  //  Now I want to try and use the new testDB instead of the first one, and see if I can avoid errors.
 
   var db;
   const nameEl = document.querySelector("#t-name");
@@ -24,6 +50,7 @@ const callback = function () {
   });
   // We request a database instance.
   const request = indexedDB.open("transactions", 1);
+  request.onerror = error => console.log(error);
 
   // request.onupgradeneeded = (event) => {
   //   db = event.target.result;
