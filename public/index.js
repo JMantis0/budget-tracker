@@ -30,9 +30,8 @@ const callback = function () {
     console.log("There was an error ", error);
   }
 
-  //  Now I want to try and use the new testDB instead of the first one, and see if I can avoid errors.
-
-  var db;
+  //  Now I want to try and use the new testDB instead of the 
+  //  first one, and see if I can avoid errors.
   const nameEl = document.querySelector("#t-name");
   const amountEl = document.querySelector("#t-amount");
   const errorEl = document.querySelector(".form .error");
@@ -45,23 +44,52 @@ const callback = function () {
     }
   });
 
+  window.addEventListener("online", async (event) => {
+    console.log("You are now connected to the network.");
+    const indexedRecords = await getIndexedRecords();
+    fetch("/api/transaction/bulk", {
+      method: "POST",
+      body: JSON.stringify(indexedRecords),
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json",
+      },
+    })
+      .then(async (response) => {
+        console.log(response);
+        await deleteIndexedRecords();
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  });
+
   window.addEventListener("offline", (event) => {
     console.log("You are now disconnected from the network.");
   });
-  // We request a database instance.
-  const request = indexedDB.open("transactions", 1);
-  request.onerror = error => console.log(error);
 
-  // request.onupgradeneeded = (event) => {
-  //   db = event.target.result;
-  //   const objectStore = db.createObjectStore("transaction", {
-  //     keyPath: "date",
-  //   });
-  //   objectStore.createIndex("name", "name");
-  //   objectStore.createIndex("value", "value");
-  //   objectStore.createIndex("date", "date");
-  // };
-
+  //Simulating goign online and offline with button
+  let onlineBtn = document.getElementById("online");
+  onlineBtn.addEventListener("click", async (event) => {
+    console.log("You are now connected to the network.");
+    const indexedRecords = await getIndexedRecords();
+    fetch("/api/transaction/bulk", {
+      method: "POST",
+      body: JSON.stringify(indexedRecords),
+      headers: {
+        Accept: "application/json, text/plain, */*",
+        "Content-Type": "application/json",
+      },
+    })
+      .then(async (response) => {
+        console.log(response);
+        await deleteIndexedRecords();
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  })
+ 
   let transactions = [];
   let myChart;
 
@@ -91,28 +119,58 @@ const callback = function () {
 
   function getIndexedRecords() {
     return new Promise(function (resolve) {
-      db = request.result;
-      const dbChange = db.transaction(["transaction"], "readwrite");
-      const transactionStore = dbChange.objectStore("transaction");
+      // db = request.result;
+      // const dbChange = db.transaction(["transaction"], "readwrite");
+      // set up a transaction
+      console.log(testDB);
+      const dbGetTransaction = testDB.transaction(["transaction"], "readwrite");
+      //  Assign the objectStore that was created on line 23 ( i think)
+      const transactionStore = dbGetTransaction.objectStore("transaction");
       const getRequest = transactionStore.getAll();
       getRequest.onsuccess = () => {
-        console.log(getRequest.result);
+        console.log("getRequest.result", getRequest.result);
         return resolve(getRequest.result);
       };
+      // dbGetTransaction.oncomplete((event) => {
+      //   console.log("Get Transaction oncomplete event", event);
+      // })
     });
   }
 
   function deleteIndexedRecords() {
     return new Promise(function (resolve) {
-      db = request.result;
-      const dbDelete = db.transaction(["transaction"], "readwrite");
-      const transactionStore = dbDelete.objectStore("transaction");
+      console.log("inside deleteIndexedRecords")
+      // db = request.result;
+      // const dbDelete = db.transaction(["transaction"], "readwrite");
+      const dbDeleteTransaction = testDB.transaction(["transaction"], "readwrite");
+      // const transactionStore = dbDelete.objectStore("transaction");
+      const transactionStore = dbDeleteTransaction.objectStore("transaction");
       const deleteRequest = transactionStore.clear();
+      // dbDeleteTransaction.oncomplete((event) => {
+      //   console.log("transaction oncomplete event", event);
+      // });
       deleteRequest.onsuccess = () => {
         console.log(deleteRequest.result);
         return resolve(deleteRequest.result);
       };
     });
+  }
+
+  function saveRecord(transaction) {
+    //  Lets use the new testDB
+    // db = request.result;
+
+    const dbSave = testDB.transaction(["transaction"], "readwrite");
+    const transactionStore = dbSave.objectStore("transaction");
+    const addRequest = transactionStore.add({
+      name: transaction.name,
+      value: transaction.value,
+      date: transaction.date,
+    });
+    // dbSave.oncomplete((event) => {
+    //   console.log("Addrequest oncomplete event", event);
+    // });
+    console.log(transaction, "Transaction saved to indexedDB");
   }
 
   function populateTotal() {
@@ -242,37 +300,9 @@ const callback = function () {
       });
   }
 
-  window.addEventListener("online", async (event) => {
-    console.log("You are now connected to the network.");
-    const indexedRecords = await getIndexedRecords();
-    fetch("/api/transaction/bulk", {
-      method: "POST",
-      body: JSON.stringify(indexedRecords),
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "application/json",
-      },
-    })
-      .then(async (response) => {
-        console.log(response);
-        await deleteIndexedRecords();
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  });
+  
 
-  function saveRecord(transaction) {
-    db = request.result;
-    const dbChange = db.transaction(["transaction"], "readwrite");
-    const transactionStore = dbChange.objectStore("transaction");
-    transactionStore.add({
-      name: transaction.name,
-      value: transaction.value,
-      date: transaction.date,
-    });
-    console.log(transaction, "Transaction saved to indexedDB");
-  }
+  
 
   document.querySelector("#add-btn").onclick = function () {
     sendTransaction(true);
