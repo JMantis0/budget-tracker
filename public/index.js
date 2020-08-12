@@ -283,5 +283,5 @@ if (
   console.log("callback");
   ready();
 } else {
-  document.addEventListener("DOMContentLoaded", callback);
+  document.addEventListener("DOMContentLoaded", ready);
 }
