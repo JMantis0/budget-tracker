@@ -85,3 +85,6 @@ self.addEventListener("fetch", function (evt) {
     })
   );
 });
+
+
+console.log("End of serviceworker.js");

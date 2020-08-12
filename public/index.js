@@ -1,44 +1,4 @@
-const callback = function () {
-  //  Creating a second testDB to try and redo the indexedDB the right way and avoid the errors
-  //  I am currently getting with the request db
-
-  //  Here the variable for the actual db is initialized
-  var testDB;
-  //  Here the request is made to open an indexedDB
-  //  I believe this assigns a request object to testDBRequest
-  const testDBRequest = indexedDB.open("testDB", 1);
-  //  Once the request object resolves?? the onsuccess is fired and
-  //  The result is assigned to testDB.  Console logs provide info
-  testDBRequest.onsuccess = async (event) => {
-    testDB = await getDB(event);
-    function getDB(event) {
-      return new Promise((resolve) => {
-        console.log("onsuccess event", event);
-        console.log(testDBRequest.result);
-        return resolve(event.target.result);
-      });
-    }
-  };
-  // The onupgradeneeded event is triggered upon creation of a database by the open call.
-  testDBRequest.onupgradeneeded = (event) => {
-    console.log("onupgradeneeded event", event);
-    //  I am not exactly certain if this line is needed since testDB was assigned on line 13.
-    testDB = event.target.result;
-    //  Here the schema is set up.
-    const transactionStore = testDB.createObjectStore("transaction", {
-      keyPath: "date",
-    });
-    //  An index is created for date, allowing search by date, which is used later to sort the entries
-    transactionStore.createIndex("date", "date");
-  };
-
-  //  Error handling
-  testDBRequest.onerror = (error) => {
-    console.log("There was an error ", error);
-  };
-
-  //  Now I want to try and use the new testDB instead of the
-  //  first one, and see if I can avoid errors.
+const ready = function () {
   const nameEl = document.querySelector("#t-name");
   const amountEl = document.querySelector("#t-amount");
   const errorEl = document.querySelector(".form .error");
@@ -53,6 +13,7 @@ const callback = function () {
 
   window.addEventListener("online", async (event) => {
     console.log("You are now connected to the network.");
+    console.log("Getting indexed records to post to MongoDB")
     const indexedRecords = await getIndexedRecords();
     fetch("/api/transaction/bulk", {
       method: "POST",
@@ -63,7 +24,8 @@ const callback = function () {
       },
     })
       .then(async (response) => {
-        console.log(response);
+
+        console.log("offline entries uploaded to online MongoDB");
         await deleteIndexedRecords();
       })
       .catch((error) => {
@@ -75,101 +37,97 @@ const callback = function () {
     console.log("You are now disconnected from the network.");
   });
 
-  //Simulating goign online and offline with button
-  let onlineBtn = document.getElementById("online");
-  onlineBtn.addEventListener("click", async (event) => {
-    console.log("You are now connected to the network.");
-    const indexedRecords = await getIndexedRecords();
-    fetch("/api/transaction/bulk", {
-      method: "POST",
-      body: JSON.stringify(indexedRecords),
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "application/json",
-      },
-    })
-      .then(async (response) => {
-        console.log(response);
-        await deleteIndexedRecords();
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  });
+  //  Creating a second testDB to try and redo the indexedDB the right way and avoid the errors
+  //  I am currently getting with the request db
+  const testDBRequest = indexedDB.open("testDB", 1);
+
+  // The onupgradeneeded event is triggered upon creation of a database by the open call.
+  testDBRequest.onupgradeneeded = (event) => {
+    console.log("onupgradeneeded event", event);
+    //  I am not exactly certain if this line is needed since testDB was assigned on line 13.
+    testDB = event.target.result;
+    //  Here the schema is set up.
+    const transactionStore = testDB.createObjectStore("transaction", {
+      keyPath: "date",
+    });
+    //  An index is created for date, allowing search by date, which is used later to sort the entries
+    transactionStore.createIndex("date", "date");
+  };
+
+  //  Once the request object resolves?? the onsuccess is fired and
+  //  The result is assigned to testDB.  Console logs provide info
+  testDBRequest.onsuccess = (event) => {
+    console.log("onsuccess event", event);
+    testDB = event.target.result;
+    console.log("testDB", testDB);
+    console.log("testDBRequest", testDBRequest);
+    initialFetch();
+  };
+
+  //  Error handling
+  testDBRequest.onerror = (error) => {
+    console.log("There was an error ", error);
+  };
 
   let transactions = [];
   let myChart;
-
-  fetch("/api/transaction/fetchAll")
-    .then((response) => {
-      console.log("fetching on looad");
-      return response.json();
-    })
-    .then(async (data) => {
-      console.log("inside fetchAll");
-      // save db data on global variable
-      transactions = data;
-      //  Get any data in the indexedDB and add it to the transactions array
-      const indexedRecords = await getIndexedRecords();
-      console.log(indexedRecords, "IndexedDBRecords");
-      console.log(transactions), "transactions";
-      transactions = [...transactions, ...indexedRecords].sort((a, b) => {
-        return a.date < b.date ? 1 : -1;
+  function initialFetch() {
+    fetch("/api/transaction/fetchAll")
+      .then((response) => {
+        console.log("fetching from cache/db");
+        return response.json();
+      })
+      .then(async (data) => {
+        console.log("inside fetchAll");
+        // save db data on global variable
+        transactions = data;
+        //  Get any data in the indexedDB and add it to the transactions array
+        const indexedRecords = await getIndexedRecords();
+        console.log("IndexedDBRecords", indexedRecords);
+        console.log("transactions", transactions);
+        console.log("Combining transactions with Indexed Records");
+        transactions = [...transactions, ...indexedRecords].sort((a, b) => {
+          return a.date < b.date ? 1 : -1;
+        });
+        console.log("sorted transactions included indexed", transactions);
+        console.log("Just before populating ");
+        populateTotal();
+        populateTable();
+        populateChart();
       });
-      console.log("indexedDB entry pushed to data");
-      console.log(transactions, "transactions");
-      console.log("Just before populating ");
-      populateTotal();
-      populateTable();
-      populateChart();
-    });
+  }
 
   function getIndexedRecords() {
     return new Promise(function (resolve) {
-      // db = request.result;
-      // const dbChange = db.transaction(["transaction"], "readwrite");
       // set up a transaction
-      console.log(testDB);
+      testDB = testDBRequest.result;
       const dbGetTransaction = testDB.transaction(["transaction"], "readwrite");
-      //  Assign the objectStore that was created on line 23 ( i think)
       const transactionStore = dbGetTransaction.objectStore("transaction");
       const getRequest = transactionStore.getAll();
       getRequest.onsuccess = () => {
         console.log("getRequest.result", getRequest.result);
         return resolve(getRequest.result);
       };
-      // dbGetTransaction.oncomplete((event) => {
-      //   console.log("Get Transaction oncomplete event", event);
-      // })
     });
   }
 
   function deleteIndexedRecords() {
     return new Promise(function (resolve) {
       console.log("inside deleteIndexedRecords");
-      // db = request.result;
-      // const dbDelete = db.transaction(["transaction"], "readwrite");
       const dbDeleteTransaction = testDB.transaction(
         ["transaction"],
         "readwrite"
       );
-      // const transactionStore = dbDelete.objectStore("transaction");
       const transactionStore = dbDeleteTransaction.objectStore("transaction");
       const deleteRequest = transactionStore.clear();
-      // dbDeleteTransaction.oncomplete((event) => {
-      //   console.log("transaction oncomplete event", event);
-      // });
       deleteRequest.onsuccess = () => {
-        console.log(deleteRequest.result);
+        console.log("IndexedDB entries:", deleteRequest.result);
         return resolve(deleteRequest.result);
       };
     });
   }
 
   function saveRecord(transaction) {
-    //  Lets use the new testDB
-    // db = request.result;
-
     const dbSave = testDB.transaction(["transaction"], "readwrite");
     const transactionStore = dbSave.objectStore("transaction");
     const addRequest = transactionStore.add({
@@ -177,10 +135,7 @@ const callback = function () {
       value: transaction.value,
       date: transaction.date,
     });
-    // dbSave.oncomplete((event) => {
-    //   console.log("Addrequest oncomplete event", event);
-    // });
-    console.log(transaction, "Transaction saved to indexedDB");
+    console.log("Transaction saved to indexedDB", transaction,);
   }
 
   function populateTotal() {
@@ -278,6 +233,7 @@ const callback = function () {
     populateTable();
     populateTotal();
 
+    if (navigator.onLine) {
     // also send to server
     fetch("/api/transaction", {
       method: "POST",
@@ -300,14 +256,15 @@ const callback = function () {
         }
       })
       .catch((err) => {
-        // fetch failed, so save in indexed db
-        console.log("fetch failed, so save in indexed db");
-        saveRecord(transaction);
-
+        console.log("There was an error when trying to POST", err)
         // clear form
         nameEl.value = "";
         amountEl.value = "";
       });
+    } else {
+      console.log("Currently offline, so save in indexed db");
+        saveRecord(transaction);
+    }
   }
 
   document.querySelector("#add-btn").onclick = function () {
@@ -324,7 +281,7 @@ if (
   (document.readyState !== "loading" && !document.documentElement.doScroll)
 ) {
   console.log("callback");
-  callback();
+  ready();
 } else {
   document.addEventListener("DOMContentLoaded", callback);
 }
