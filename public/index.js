@@ -9,28 +9,35 @@ const callback = function () {
   const testDBRequest = indexedDB.open("testDB", 1);
   //  Once the request object resolves?? the onsuccess is fired and
   //  The result is assigned to testDB.  Console logs provide info
-  testDBRequest.onsuccess = event => {
-    testDB = event.target.result;
-    console.log("onsuccess event", event);
-    console.log(testDBRequest.result);
-  }
+  testDBRequest.onsuccess = async (event) => {
+    testDB = await getDB(event);
+    function getDB(event) {
+      return new Promise((resolve) => {
+        console.log("onsuccess event", event);
+        console.log(testDBRequest.result);
+        return resolve(event.target.result);
+      });
+    }
+  };
   // The onupgradeneeded event is triggered upon creation of a database by the open call.
   testDBRequest.onupgradeneeded = (event) => {
     console.log("onupgradeneeded event", event);
     //  I am not exactly certain if this line is needed since testDB was assigned on line 13.
     testDB = event.target.result;
     //  Here the schema is set up.
-    const transactionStore = testDB.createObjectStore("transaction", {keyPath: "date"});
+    const transactionStore = testDB.createObjectStore("transaction", {
+      keyPath: "date",
+    });
     //  An index is created for date, allowing search by date, which is used later to sort the entries
     transactionStore.createIndex("date", "date");
-  }
+  };
 
   //  Error handling
   testDBRequest.onerror = (error) => {
     console.log("There was an error ", error);
-  }
+  };
 
-  //  Now I want to try and use the new testDB instead of the 
+  //  Now I want to try and use the new testDB instead of the
   //  first one, and see if I can avoid errors.
   const nameEl = document.querySelector("#t-name");
   const amountEl = document.querySelector("#t-amount");
@@ -88,8 +95,8 @@ const callback = function () {
       .catch((error) => {
         console.log(error);
       });
-  })
- 
+  });
+
   let transactions = [];
   let myChart;
 
@@ -139,10 +146,13 @@ const callback = function () {
 
   function deleteIndexedRecords() {
     return new Promise(function (resolve) {
-      console.log("inside deleteIndexedRecords")
+      console.log("inside deleteIndexedRecords");
       // db = request.result;
       // const dbDelete = db.transaction(["transaction"], "readwrite");
-      const dbDeleteTransaction = testDB.transaction(["transaction"], "readwrite");
+      const dbDeleteTransaction = testDB.transaction(
+        ["transaction"],
+        "readwrite"
+      );
       // const transactionStore = dbDelete.objectStore("transaction");
       const transactionStore = dbDeleteTransaction.objectStore("transaction");
       const deleteRequest = transactionStore.clear();
@@ -299,10 +309,6 @@ const callback = function () {
         amountEl.value = "";
       });
   }
-
-  
-
-  
 
   document.querySelector("#add-btn").onclick = function () {
     sendTransaction(true);
