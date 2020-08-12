@@ -44,14 +44,11 @@ const ready = function () {
   // The onupgradeneeded event is triggered upon creation of a database by the open call.
   testDBRequest.onupgradeneeded = (event) => {
     console.log("onupgradeneeded event", event);
-    //  I am not exactly certain if this line is needed since testDB was assigned on line 13.
     testDB = event.target.result;
     //  Here the schema is set up.
     const transactionStore = testDB.createObjectStore("transaction", {
       keyPath: "date",
     });
-    //  An index is created for date, allowing search by date, which is used later to sort the entries
-    transactionStore.createIndex("date", "date");
   };
 
   //  Once the request object resolves?? the onsuccess is fired and
@@ -140,7 +137,6 @@ const ready = function () {
 
   function populateTotal() {
     // reduce transaction amounts to a single total value
-    console.log(transactions);
     let total = transactions.reduce((total, t) => {
       return total + parseInt(t.value);
     }, 0);
@@ -276,12 +272,4 @@ const ready = function () {
   };
 };
 
-if (
-  document.readyState === "complete" ||
-  (document.readyState !== "loading" && !document.documentElement.doScroll)
-) {
-  console.log("callback");
-  ready();
-} else {
-  document.addEventListener("DOMContentLoaded", callback);
-}
+window.onload = ready;
