@@ -32,6 +32,7 @@ self.addEventListener("install", function (evt) {
 });
 
 self.addEventListener("activate", function (evt) {
+  console.log("service worker is now activated")
   evt.waitUntil(
     caches.keys().then((keyList) => {
       return Promise.all(
@@ -47,8 +48,7 @@ self.addEventListener("activate", function (evt) {
 
   self.clients.claim();
 });
- 
-// fetch
+
 self.addEventListener("fetch", function (evt) {
   // cache successful requests to the API
   console.log("Fetch event for ", evt.request.url);
@@ -85,6 +85,3 @@ self.addEventListener("fetch", function (evt) {
     })
   );
 });
-
-
-console.log("End of serviceworker.js");

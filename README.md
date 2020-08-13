@@ -5,7 +5,7 @@
 
 ## Getting Started
 
-This is a web application that allows users to track their budgets.
+This is a web application that allows users to track their budgets.  
 
 
 ## Installation
