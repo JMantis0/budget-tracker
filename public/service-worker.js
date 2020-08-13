@@ -47,7 +47,7 @@ self.addEventListener("activate", function (evt) {
       })
       );
       
-      event.waitUntil(self.clients.claim());
+      self.clients.claim();
 });
 
 self.addEventListener("fetch", function (evt) {
@@ -61,10 +61,8 @@ self.addEventListener("fetch", function (evt) {
           return fetch(evt.request)
             .then((response) => {
               // If the response was good, clone it and store it in the cache.
-              console.log("response", response);
               if (response.status === 200) {
                 console.log("Adding to cache: url - ", evt.request.url);
-                console.log(response);
                 cache.put(evt.request.url, response.clone());
               }
               return response;
