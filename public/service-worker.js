@@ -31,6 +31,7 @@ self.addEventListener("install", function (evt) {
   self.skipWaiting();
 });
 
+
 self.addEventListener("activate", function (evt) {
   evt.waitUntil(
     caches.keys().then((keyList) => {
@@ -41,11 +42,11 @@ self.addEventListener("activate", function (evt) {
             return caches.delete(key);
           }
         })
+        );
+      })
       );
-    })
-  );
-
-  self.clients.claim();
+      
+      event.waitUntil(self.clients.claim());
 });
  
 // fetch
@@ -60,6 +61,7 @@ self.addEventListener("fetch", function (evt) {
           return fetch(evt.request)
             .then((response) => {
               // If the response was good, clone it and store it in the cache.
+              console.log("response", response);
               if (response.status === 200) {
                 console.log("Adding to cache: url - ", evt.request.url);
                 console.log(response);

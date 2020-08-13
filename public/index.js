@@ -72,6 +72,7 @@ const ready = function () {
   let transactions = [];
   let myChart;
   function initialFetch() {
+    // setTimeout(function() {
     fetch("/api/transaction/fetchAll")
       .then((response) => {
         console.log("fetching from cache/db");
@@ -95,7 +96,8 @@ const ready = function () {
         populateTable();
         populateChart();
       });
-  }
+  // }, 3000);
+}
 
   function getIndexedRecords() {
     return new Promise(function (resolve) {
