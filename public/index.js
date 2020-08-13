@@ -1,4 +1,16 @@
 const ready = function () {
+  function waitUntilServiceWorkerActive() {
+    if (navigator.serviceWorker.controller === null) {
+      console.log("service worker not active yet... delaying script");
+      setTimeout(waitUntilServiceWorkerActive, 50);
+      return;
+    } else {
+      console.log("Service worker active, beginning scripts");
+      initialFetchAndPopulate();
+    }
+  }
+  waitUntilServiceWorkerActive();
+
   const nameEl = document.querySelector("#t-name");
   const amountEl = document.querySelector("#t-amount");
   const errorEl = document.querySelector(".form .error");
@@ -13,7 +25,7 @@ const ready = function () {
 
   window.addEventListener("online", async (event) => {
     console.log("You are now connected to the network.");
-    console.log("Getting indexed records to post to MongoDB")
+    console.log("Getting indexed records to post to MongoDB");
     const indexedRecords = await getIndexedRecords();
     fetch("/api/transaction/bulk", {
       method: "POST",
@@ -24,7 +36,6 @@ const ready = function () {
       },
     })
       .then(async (response) => {
-
         console.log("offline entries uploaded to online MongoDB");
         await deleteIndexedRecords();
       })
@@ -44,14 +55,11 @@ const ready = function () {
   // The onupgradeneeded event is triggered upon creation of a database by the open call.
   testDBRequest.onupgradeneeded = (event) => {
     console.log("onupgradeneeded event", event);
-    //  I am not exactly certain if this line is needed since testDB was assigned on line 13.
     testDB = event.target.result;
     //  Here the schema is set up.
     const transactionStore = testDB.createObjectStore("transaction", {
       keyPath: "date",
     });
-    //  An index is created for date, allowing search by date, which is used later to sort the entries
-    transactionStore.createIndex("date", "date");
   };
 
   //  Once the request object resolves?? the onsuccess is fired and
@@ -61,7 +69,6 @@ const ready = function () {
     testDB = event.target.result;
     console.log("testDB", testDB);
     console.log("testDBRequest", testDBRequest);
-    initialFetch();
   };
 
   //  Error handling
@@ -71,8 +78,8 @@ const ready = function () {
 
   let transactions = [];
   let myChart;
-  function initialFetch() {
-    // setTimeout(function() {
+
+  function initialFetchAndPopulate() {
     fetch("/api/transaction/fetchAll")
       .then((response) => {
         console.log("fetching from cache/db");
@@ -90,13 +97,12 @@ const ready = function () {
         transactions = [...transactions, ...indexedRecords].sort((a, b) => {
           return a.date < b.date ? 1 : -1;
         });
-        console.log("sorted transactions included indexed", transactions);
+        console.log("sorted transactions including indexed", transactions);
         console.log("Just before populating ");
         populateTotal();
         populateTable();
         populateChart();
       });
-  // }, 3000);
 }
 
   function getIndexedRecords() {
@@ -137,12 +143,11 @@ const ready = function () {
       value: transaction.value,
       date: transaction.date,
     });
-    console.log("Transaction saved to indexedDB", transaction,);
+    console.log("Transaction saved to indexedDB", transaction);
   }
 
   function populateTotal() {
     // reduce transaction amounts to a single total value
-    console.log(transactions);
     let total = transactions.reduce((total, t) => {
       return total + parseInt(t.value);
     }, 0);
@@ -159,9 +164,9 @@ const ready = function () {
       // create and populate a table row
       let tr = document.createElement("tr");
       tr.innerHTML = `
-      <td>${transaction.name}</td>
-      <td>${transaction.value}</td>
-    `;
+    <td>${transaction.name}</td>
+    <td>${transaction.value}</td>
+  `;
 
       tbody.appendChild(tr);
     });
@@ -236,36 +241,36 @@ const ready = function () {
     populateTotal();
 
     if (navigator.onLine) {
-    // also send to server
-    fetch("/api/transaction", {
-      method: "POST",
-      body: JSON.stringify(transaction),
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => {
-        return response.json();
+      // also send to server
+      fetch("/api/transaction", {
+        method: "POST",
+        body: JSON.stringify(transaction),
+        headers: {
+          Accept: "application/json, text/plain, */*",
+          "Content-Type": "application/json",
+        },
       })
-      .then((data) => {
-        if (data.errors) {
-          errorEl.textContent = "Missing Information";
-        } else {
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          if (data.errors) {
+            errorEl.textContent = "Missing Information";
+          } else {
+            // clear form
+            nameEl.value = "";
+            amountEl.value = "";
+          }
+        })
+        .catch((err) => {
+          console.log("There was an error when trying to POST", err);
           // clear form
           nameEl.value = "";
           amountEl.value = "";
-        }
-      })
-      .catch((err) => {
-        console.log("There was an error when trying to POST", err)
-        // clear form
-        nameEl.value = "";
-        amountEl.value = "";
-      });
+        });
     } else {
       console.log("Currently offline, so save in indexed db");
-        saveRecord(transaction);
+      saveRecord(transaction);
     }
   }
 
@@ -277,13 +282,4 @@ const ready = function () {
     sendTransaction(false);
   };
 };
-
-if (
-  document.readyState === "complete" ||
-  (document.readyState !== "loading" && !document.documentElement.doScroll)
-) {
-  console.log("callback");
-  ready();
-} else {
-  document.addEventListener("DOMContentLoaded", ready);
-}
+window.onload = ready;
