@@ -1,19 +1,23 @@
 const ready = function () {
-  function waitUntilServiceWorkerActive() {
-    if (navigator.serviceWorker.controller === null) {
-      console.log("service worker not active yet... delaying script");
-      setTimeout(waitUntilServiceWorkerActive, 50);
-      return;
-    } else {
-      console.log("Service worker active, beginning scripts");
-      initialFetchAndPopulate();
-    }
-  }
-  waitUntilServiceWorkerActive();
+  waitUntilServiceWorkerActiveThenFetch();
+  //  Global variables that handle data from the dbs
+  let transactions = [];
+  let myChart;
+  let testDB;
 
+  //  Assign HTML elements to variables
   const nameEl = document.querySelector("#t-name");
   const amountEl = document.querySelector("#t-amount");
   const errorEl = document.querySelector(".form .error");
+
+  //  Click listeners for the Add Funds and Subtract Funds buttons.
+  document.querySelector("#add-btn").onclick = function () {
+    sendTransaction(true);
+  };
+
+  document.querySelector("#sub-btn").onclick = function () {
+    sendTransaction(false);
+  };
 
   //  Only allow numerics in amount field
   const amountInputCharsAllowed = /[0-9\/]+/;
@@ -23,9 +27,15 @@ const ready = function () {
     }
   });
 
+  //  Listener triggers when the network changes from offline to online.
+  //  Any records that were saved into the indexedDB while offline are
+  //  retrieved and posted to the online mongoDB.  Then the indexedDB
+  //  records are deleted.
   window.addEventListener("online", async (event) => {
     console.log("You are now connected to the network.");
-    console.log("Getting indexed records to post to MongoDB");
+    console.log(
+      "Updating online MongoDB with transactions saved offline in IndexedDB"
+    );
     const indexedRecords = await getIndexedRecords();
     fetch("/api/transaction/bulk", {
       method: "POST",
@@ -36,7 +46,7 @@ const ready = function () {
       },
     })
       .then(async (response) => {
-        console.log("offline entries uploaded to online MongoDB");
+        console.log("Offline entries uploaded to online MongoDB");
         await deleteIndexedRecords();
       })
       .catch((error) => {
@@ -44,17 +54,17 @@ const ready = function () {
       });
   });
 
+  //  Listener triggers when the network becomes disconnected
   window.addEventListener("offline", (event) => {
     console.log("You are now disconnected from the network.");
   });
 
-  //  Creating a second testDB to try and redo the indexedDB the right way and avoid the errors
-  //  I am currently getting with the request db
+  //  Create an indexedDB request
   const testDBRequest = indexedDB.open("testDB", 1);
 
   // The onupgradeneeded event is triggered upon creation of a database by the open call.
   testDBRequest.onupgradeneeded = (event) => {
-    console.log("onupgradeneeded event", event);
+    // console.log("onupgradeneeded event", event);
     testDB = event.target.result;
     //  Here the schema is set up.
     const transactionStore = testDB.createObjectStore("transaction", {
@@ -62,13 +72,13 @@ const ready = function () {
     });
   };
 
-  //  Once the request object resolves?? the onsuccess is fired and
+  //  Once the request object resolves the onsuccess is fired and
   //  The result is assigned to testDB.  Console logs provide info
   testDBRequest.onsuccess = (event) => {
-    console.log("onsuccess event", event);
+    // console.log("onsuccess event", event);
     testDB = event.target.result;
-    console.log("testDB", testDB);
-    console.log("testDBRequest", testDBRequest);
+    // console.log("testDB", testDB);
+    // console.log("testDBRequest", testDBRequest);
   };
 
   //  Error handling
@@ -76,35 +86,42 @@ const ready = function () {
     console.log("There was an error ", error);
   };
 
-  let transactions = [];
-  let myChart;
+  //  This function solves the problem of the service-worker
+  //  not being ready in time to cache the first fetch
+  function waitUntilServiceWorkerActiveThenFetch() {
+    if (navigator.serviceWorker.controller === null) {
+      console.log("Service worker not active yet... delaying initial fetch.");
+      setTimeout(waitUntilServiceWorkerActiveThenFetch, 50);
+      return;
+    } else {
+      console.log("Service worker is active... beginning initial fetch.");
+      initialFetchAndPopulate();
+    }
+  }
 
+  //  Function gets data from the dbs and populates the chart with the data
   function initialFetchAndPopulate() {
     fetch("/api/transaction/fetchAll")
       .then((response) => {
-        console.log("fetching from cache/db");
         return response.json();
       })
       .then(async (data) => {
-        console.log("inside fetchAll");
         // save db data on global variable
         transactions = data;
         //  Get any data in the indexedDB and add it to the transactions array
         const indexedRecords = await getIndexedRecords();
-        console.log("IndexedDBRecords", indexedRecords);
-        console.log("transactions", transactions);
-        console.log("Combining transactions with Indexed Records");
         transactions = [...transactions, ...indexedRecords].sort((a, b) => {
           return a.date < b.date ? 1 : -1;
         });
-        console.log("sorted transactions including indexed", transactions);
-        console.log("Just before populating ");
+        //  Populate function-calls.  These functions use the global transactions variable
         populateTotal();
         populateTable();
         populateChart();
       });
   }
 
+  //  This function gets data from the indexedDB through a Promise.
+  //  Designed to be 'await'-able
   function getIndexedRecords() {
     return new Promise(function (resolve) {
       // set up a transaction
@@ -113,15 +130,16 @@ const ready = function () {
       const transactionStore = dbGetTransaction.objectStore("transaction");
       const getRequest = transactionStore.getAll();
       getRequest.onsuccess = () => {
-        console.log("getRequest.result", getRequest.result);
+        // console.log("getRequest.result", getRequest.result);
         return resolve(getRequest.result);
       };
     });
   }
 
+  //  This function deletes data from the indexedDB through a Promise.
+  //  Designed to be 'await'-able.
   function deleteIndexedRecords() {
     return new Promise(function (resolve) {
-      console.log("inside deleteIndexedRecords");
       const dbDeleteTransaction = testDB.transaction(
         ["transaction"],
         "readwrite"
@@ -129,12 +147,13 @@ const ready = function () {
       const transactionStore = dbDeleteTransaction.objectStore("transaction");
       const deleteRequest = transactionStore.clear();
       deleteRequest.onsuccess = () => {
-        console.log("IndexedDB entries:", deleteRequest.result);
+        // console.log("IndexedDB entries:", deleteRequest.result);
         return resolve(deleteRequest.result);
       };
     });
   }
 
+  //  Function saves transaction to the indexedDB
   function saveRecord(transaction) {
     const dbSave = testDB.transaction(["transaction"], "readwrite");
     const transactionStore = dbSave.objectStore("transaction");
@@ -143,9 +162,14 @@ const ready = function () {
       value: transaction.value,
       date: transaction.date,
     });
-    console.log("Transaction saved to indexedDB", transaction);
+    // clear form
+    nameEl.value = "";
+    amountEl.value = "";
+    console.log("Currently offline... transaction saved to indexedDB", transaction);
+
   }
 
+  //  Populate functions render data to the HTML
   function populateTotal() {
     // reduce transaction amounts to a single total value
     let total = transactions.reduce((total, t) => {
@@ -212,6 +236,9 @@ const ready = function () {
     });
   }
 
+  //  Function gets info from the client inputs and creates a transaction.
+  //  Then the transaction is saved to a database: indexedDB if offline, mongoDB if online.
+  //  Then the new data is rendered to HTML
   function sendTransaction(isAdding) {
     // validate form
     if (nameEl.value === "" || amountEl.value === "") {
@@ -269,17 +296,9 @@ const ready = function () {
           amountEl.value = "";
         });
     } else {
-      console.log("Currently offline, so save in indexed db");
       saveRecord(transaction);
     }
   }
-
-  document.querySelector("#add-btn").onclick = function () {
-    sendTransaction(true);
-  };
-
-  document.querySelector("#sub-btn").onclick = function () {
-    sendTransaction(false);
-  };
 };
+
 window.onload = ready;

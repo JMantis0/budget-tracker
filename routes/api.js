@@ -32,4 +32,14 @@ router.get("/api/transaction/fetchAll", (req, res) => {
     });
 });
 
+router.delete("/transactions/clearData", (req, res) => {
+  Transaction.deleteMany()
+    .then(dbTransaction => {
+      res.json(dbTransaction);
+    })
+    .catch(err => {
+      res.status(404).json(err)
+    });
+});
+
 module.exports = router;
