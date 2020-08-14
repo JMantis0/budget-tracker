@@ -23,7 +23,7 @@ self.addEventListener("install", function (evt) {
   console.log("Attempting to install service worker and cache static assets");
   evt.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
-      console.log("Your files were pre-cached successfully!");
+      console.log("Static files pre-cached successfully!");
       return cache.addAll(FILES_TO_CACHE);
     })
   );
@@ -33,7 +33,7 @@ self.addEventListener("install", function (evt) {
 
 
 self.addEventListener("activate", function (evt) {
-  console.log("service worker is now activated")
+  console.log("Service worker activating")
   evt.waitUntil(
     caches.keys().then((keyList) => {
       return Promise.all(
@@ -62,7 +62,7 @@ self.addEventListener("fetch", function (evt) {
             .then((response) => {
               // If the response was good, clone it and store it in the cache.
               if (response.status === 200) {
-                console.log("Adding to cache: url - ", evt.request.url);
+                console.log("Adding to data-cache: url - ", evt.request.url);
                 cache.put(evt.request.url, response.clone());
               }
               return response;
@@ -81,7 +81,13 @@ self.addEventListener("fetch", function (evt) {
   //  Static files route through here.
   evt.respondWith(
     caches.match(evt.request).then(function (response) {
-      return response || fetch(evt.request);
+      if (response) {
+        console.log("Match found in cache... responding with cache for ", evt.request.url);
+        return response
+      } else {
+        console.log("No match in cache, fetching ", evt.request.url);
+        return fetch(evt.request);
+      }
     })
   );
 });
