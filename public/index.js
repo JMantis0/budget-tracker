@@ -1,4 +1,5 @@
 const ready = function () {
+
   function waitUntilServiceWorkerActive() {
     if (navigator.serviceWorker.controller === null) {
       console.log("service worker not active yet... delaying script");
@@ -11,6 +12,8 @@ const ready = function () {
   }
   waitUntilServiceWorkerActive();
 
+
+  //  Assign HTML elements to variables
   const nameEl = document.querySelector("#t-name");
   const amountEl = document.querySelector("#t-amount");
   const errorEl = document.querySelector(".form .error");
@@ -23,6 +26,10 @@ const ready = function () {
     }
   });
 
+  //  Listener triggers when the network changes from offline to online.
+  //  Any records that were saved into the indexedDB while offline are
+  //  retrieved and posted to the online mongoDB.  Then the indexedDB
+  //  records are deleted.
   window.addEventListener("online", async (event) => {
     console.log("You are now connected to the network.");
     console.log("Getting indexed records to post to MongoDB");
@@ -44,12 +51,12 @@ const ready = function () {
       });
   });
 
+  //  Listener triggers when the network becomes disconnected
   window.addEventListener("offline", (event) => {
     console.log("You are now disconnected from the network.");
   });
 
-  //  Creating a second testDB to try and redo the indexedDB the right way and avoid the errors
-  //  I am currently getting with the request db
+  //  Create an indexedDB request
   const testDBRequest = indexedDB.open("testDB", 1);
 
   // The onupgradeneeded event is triggered upon creation of a database by the open call.
@@ -62,7 +69,7 @@ const ready = function () {
     });
   };
 
-  //  Once the request object resolves?? the onsuccess is fired and
+  //  Once the request object resolves the onsuccess is fired and
   //  The result is assigned to testDB.  Console logs provide info
   testDBRequest.onsuccess = (event) => {
     console.log("onsuccess event", event);
@@ -76,13 +83,14 @@ const ready = function () {
     console.log("There was an error ", error);
   };
 
+  //  Global variables that handle data from the dbs
   let transactions = [];
   let myChart;
 
+  //  Function gets data from the dbs and populates the chart with the data
   function initialFetchAndPopulate() {
     fetch("/api/transaction/fetchAll")
       .then((response) => {
-        console.log("fetching from cache/db");
         return response.json();
       })
       .then(async (data) => {
@@ -91,20 +99,18 @@ const ready = function () {
         transactions = data;
         //  Get any data in the indexedDB and add it to the transactions array
         const indexedRecords = await getIndexedRecords();
-        console.log("IndexedDBRecords", indexedRecords);
-        console.log("transactions", transactions);
-        console.log("Combining transactions with Indexed Records");
         transactions = [...transactions, ...indexedRecords].sort((a, b) => {
           return a.date < b.date ? 1 : -1;
         });
-        console.log("sorted transactions including indexed", transactions);
-        console.log("Just before populating ");
+        //  populate function calls.  These functions use the global transactions variable
         populateTotal();
         populateTable();
         populateChart();
       });
   }
 
+  //  This function gets data from the indexedDB through a Promise.
+  //  Designed to be 'await'-able
   function getIndexedRecords() {
     return new Promise(function (resolve) {
       // set up a transaction
@@ -119,6 +125,8 @@ const ready = function () {
     });
   }
 
+  //  This function deletes data from the indexedDB through a Promise.
+  //  Designed to be 'await'-able.
   function deleteIndexedRecords() {
     return new Promise(function (resolve) {
       console.log("inside deleteIndexedRecords");
@@ -135,6 +143,7 @@ const ready = function () {
     });
   }
 
+  //  Function saves transaction to the indexedDB
   function saveRecord(transaction) {
     const dbSave = testDB.transaction(["transaction"], "readwrite");
     const transactionStore = dbSave.objectStore("transaction");
@@ -146,6 +155,7 @@ const ready = function () {
     console.log("Transaction saved to indexedDB", transaction);
   }
 
+  //  Populate functions render data to the HTML
   function populateTotal() {
     // reduce transaction amounts to a single total value
     let total = transactions.reduce((total, t) => {
@@ -212,6 +222,9 @@ const ready = function () {
     });
   }
 
+  //  Function gets info from the client inputs and creates a transaction.
+  //  Then the transaction is saved to a database: indexedDB if offline, mongoDB if online.
+  //  Then the new data is rendered to HTML
   function sendTransaction(isAdding) {
     // validate form
     if (nameEl.value === "" || amountEl.value === "") {
@@ -274,6 +287,7 @@ const ready = function () {
     }
   }
 
+  //  Click listeners for the Add Funds and Subtract Funds buttons.
   document.querySelector("#add-btn").onclick = function () {
     sendTransaction(true);
   };
@@ -282,4 +296,5 @@ const ready = function () {
     sendTransaction(false);
   };
 };
+
 window.onload = ready;
