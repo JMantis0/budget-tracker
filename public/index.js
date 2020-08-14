@@ -103,7 +103,7 @@ const ready = function () {
         populateTable();
         populateChart();
       });
-}
+  }
 
   function getIndexedRecords() {
     return new Promise(function (resolve) {
