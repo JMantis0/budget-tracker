@@ -3,6 +3,7 @@ const ready = function () {
   //  Global variables that handle data from the dbs
   let transactions = [];
   let myChart;
+  let testDB;
 
   //  Assign HTML elements to variables
   const nameEl = document.querySelector("#t-name");
@@ -93,7 +94,7 @@ const ready = function () {
       setTimeout(waitUntilServiceWorkerActiveThenFetch, 50);
       return;
     } else {
-      console.log("Service worker now active... beginning initial fetch.");
+      console.log("Service worker is active... beginning initial fetch.");
       initialFetchAndPopulate();
     }
   }
@@ -161,7 +162,11 @@ const ready = function () {
       value: transaction.value,
       date: transaction.date,
     });
+    // clear form
+    nameEl.value = "";
+    amountEl.value = "";
     console.log("Currently offline... transaction saved to indexedDB", transaction);
+
   }
 
   //  Populate functions render data to the HTML
