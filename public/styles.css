@@ -60,7 +60,7 @@ tr:nth-child(odd) {
 }
 
 #myChart {
-  background-image: linear-gradient( rgb(255, 215, 140), rgb(255, 193, 77));
+  background-image:linear-gradient( rgb(255, 215, 140), rgb(255, 193, 77));
   box-shadow: 20px 20px rgb(23, 32, 90);
 }
 .form {
@@ -81,4 +81,12 @@ tr:nth-child(odd) {
   background-color: rgb(23, 32, 90);
   width: 100%;
   text-align: center;
+}
+
+a {
+  color: red;
+}
+
+button:hover {
+background-color: rgb(34, 228, 34);
 }

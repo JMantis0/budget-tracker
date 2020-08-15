@@ -230,7 +230,7 @@ const ready = function () {
           {
             label: "Total Over Time",
             fill: true,
-            backgroundColor: "#00ff00",
+            backgroundColor: "#00C070",
             data, //  Find more specific word for this?
           },
         ],
