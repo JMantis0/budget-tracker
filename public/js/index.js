@@ -76,7 +76,7 @@ const ready = function () {
   testDBRequest.onsuccess = (event) => {
     // console.log("onsuccess event", event);
     testDB = event.target.result;
-    console.log("IndexedDB onsuccess event ", event);
+    // console.log("IndexedDB onsuccess event ", event);
     // console.log("testDB", testDB);
     // console.log("testDBRequest", testDBRequest);
     waitUntilServiceWorkerActiveThenFetch();

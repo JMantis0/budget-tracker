@@ -12,9 +12,7 @@ This is an installable Progressive Web Application that allows users to track th
 
 Visit the budget tracker [site](https://jbudget-tracker.herokuapp.com/).  Open your browser menu and click 'Install Budget Tracker.'  Open the application from your desktop or mobile phone.
 
-**Put Gf of User Clicking through Install budget tracker here
-
-
+![install-image](./public/images/install-screenshot.png)
 
 ## Usage
 
@@ -22,15 +20,15 @@ Enter a name and amount for your transaction.  Click 'Add Funds' for deposits or
 
 A list of your transaction details and a graph of your transaction history is are displayed on the page.
 
-Image of graph and list of transactions here.
+![app-image](./public/images/app-screenshot.png)
 
 ## Concepts within
-- Mongoose
-- Service Worker
+- Progressive Web Application
+- Service Workers
 - IndexedDB
 - File and Data caching
-- Progressive Web Application
-
+- MongoDB/Mongoose
+- Express
 
 ## Credits
 

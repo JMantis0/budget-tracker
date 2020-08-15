@@ -1,9 +1,9 @@
 const FILES_TO_CACHE = [
   "/",
   "/index.html",
-  "/index.js",
+  "/js/index.js",
   "/manifest.webmanifest",
-  "/styles.css",
+  "/css/styles.css",
   "/icons/icon-72x72.png",
   "/icons/icon-96x96.png",
   "/icons/icon-128x128.png",
