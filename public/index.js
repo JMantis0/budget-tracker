@@ -77,6 +77,7 @@ const ready = function () {
   testDBRequest.onsuccess = (event) => {
     // console.log("onsuccess event", event);
     testDB = event.target.result;
+    console.log("IndexedDB onsuccess event ", event);
     // console.log("testDB", testDB);
     // console.log("testDBRequest", testDBRequest);
   };
@@ -130,7 +131,6 @@ const ready = function () {
       const transactionStore = dbGetTransaction.objectStore("transaction");
       const getRequest = transactionStore.getAll();
       getRequest.onsuccess = () => {
-        // console.log("getRequest.result", getRequest.result);
         return resolve(getRequest.result);
       };
     });
@@ -165,8 +165,10 @@ const ready = function () {
     // clear form
     nameEl.value = "";
     amountEl.value = "";
-    console.log("Currently offline... transaction saved to indexedDB", transaction);
-
+    console.log(
+      "Currently offline... transaction saved to indexedDB",
+      transaction
+    );
   }
 
   //  Populate functions render data to the HTML
@@ -228,7 +230,7 @@ const ready = function () {
           {
             label: "Total Over Time",
             fill: true,
-            backgroundColor: "#6666ff",
+            backgroundColor: "#00ff00",
             data, //  Find more specific word for this?
           },
         ],

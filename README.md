@@ -1,24 +1,35 @@
 # budget-tracker
-# [budget-tracker]https://jbudget-tracker.herokuapp.com/)
-![GitHub repo size](https://img.shields.io/github/repo-size/JMantis0/readme-generator)  ![GitHub language count](https://img.shields.io/github/languages/count/JMantis0/readme-generator)  ![GitHub top language](https://img.shields.io/github/languages/top/JMantis0/readme-generator)
+# [budget-tracker](https://jbudget-tracker.herokuapp.com/)
+![GitHub repo size](https://img.shields.io/github/repo-size/JMantis0/budget-tracker)  ![GitHub language count](https://img.shields.io/github/languages/count/JMantis0/budget-tracker)  ![GitHub top language](https://img.shields.io/github/languages/top/JMantis0/budget-tracker)
 
 
 ## Getting Started
 
-This is a web application that allows users to track their budgets.  
+This is an installable Progressive Web Application that allows users to track their budgets, even when offline.
 
 
 ## Installation
+
+Visit the budget tracker [site](https://jbudget-tracker.herokuapp.com/).  Open your browser menu and click 'Install Budget Tracker.'  Open the application from your desktop or mobile phone.
+
+**Put Gf of User Clicking through Install budget tracker here
 
 
 
 ## Usage
 
+Enter a name and amount for your transaction.  Click 'Add Funds' for deposits or 'Subtract Funds' for purchases/withdrawals.  
 
+A list of your transaction details and a graph of your transaction history is are displayed on the page.
 
-![image alt here](image uri here)
+Image of graph and list of transactions here.
 
 ## Concepts within
+- Mongoose
+- Service Worker
+- IndexedDB
+- File and Data caching
+- Progressive Web Application
 
 
 ## Credits

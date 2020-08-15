@@ -1,11 +1,24 @@
 body {
   font-size: 120%;
   font-family: Arial;
+  background-color: rgb(144, 132, 81)
+  /* background-color: gold; */
 }
+
+.total {
+  background-image: linear-gradient(rgb(186, 161, 115), orange);
+  box-shadow: 20px 20px rgb(23, 32, 90);
+}
+
+.transactions {
+  box-shadow: 20px 20px rgb(23, 32, 90);
+}
+
 
 button, input {
   font-size: 100%;
   font-family: Arial;
+  box-shadow: 10px 10px rgb(23, 32, 90);
 }
 
 table {
@@ -18,11 +31,20 @@ td, th {
   padding: 8px;
 }
 
+th {
+  background-image: linear-gradient( rgb(255, 201, 101), orange);
+}
+
 tr:nth-child(even) {
-  background-color: #dddddd;
+  background-image: linear-gradient(rgb(255, 201, 101), orange)
+}
+
+tr:nth-child(odd) {
+  background-image: linear-gradient(rgb(7, 245, 146), rgb(0, 177, 118));
 }
 
 .error {
+  background-color: white;
   color: red;
 }
 
@@ -37,6 +59,10 @@ tr:nth-child(even) {
   text-decoration: underline;
 }
 
+#myChart {
+  background-image: linear-gradient( rgb(255, 215, 140), rgb(255, 193, 77));
+  box-shadow: 20px 20px rgb(23, 32, 90);
+}
 .form {
   margin-top: 25px;
   width: 100%;
@@ -48,4 +74,11 @@ tr:nth-child(even) {
   overflow: auto;
   width: 90%;
   margin: 0 auto;
+}
+
+#budgetFooter {
+  color: white;
+  background-color: rgb(23, 32, 90);
+  width: 100%;
+  text-align: center;
 }
