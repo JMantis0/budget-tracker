@@ -20,7 +20,7 @@ Enter a name and amount for your transaction.  Click 'Add Funds' for deposits or
 
 A list of your transaction details and a graph of your transaction history is are displayed on the page.
 
-![app-image](./public/images/app-screenshot.png)
+![app-image](./public/images/app-screenshot.JPG)
 
 ## Concepts within
 - Progressive Web Application
