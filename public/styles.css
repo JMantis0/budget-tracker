@@ -1,8 +1,7 @@
 body {
   font-size: 120%;
   font-family: Arial;
-  background-color: rgb(144, 132, 81)
-  /* background-color: gold; */
+  background-color: rgb(144, 132, 81);
 }
 
 .total {
@@ -16,6 +15,7 @@ body {
 
 
 button, input {
+  margin-top: 10px;
   font-size: 100%;
   font-family: Arial;
   box-shadow: 10px 10px rgb(23, 32, 90);
