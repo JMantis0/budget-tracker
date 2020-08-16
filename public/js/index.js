@@ -32,9 +32,9 @@ const ready = function () {
   //  records are deleted.
   window.addEventListener("online", async (event) => {
     console.log("You are now connected to the network.");
-    console.log(
-      "Updating online MongoDB with transactions saved offline in IndexedDB"
-    );
+    // console.log(
+      // "Updating online MongoDB with transactions saved offline in IndexedDB"
+    // );
     const indexedRecords = await getIndexedRecords();
     fetch("/api/transaction/bulk", {
       method: "POST",
@@ -91,17 +91,17 @@ const ready = function () {
   //  not being ready in time to cache the first fetch
   function waitUntilServiceWorkerActiveThenFetch() {
     if (navigator.serviceWorker.controller === null) {
-      console.log("Service worker not active yet... delaying initial fetch.");
+      // console.log("Service worker not active yet... delaying initial fetch.");
       setTimeout(waitUntilServiceWorkerActiveThenFetch, 50);
       return;
     } else {
-      console.log("Service worker is active... beginning initial fetch.");
-      initialFetchAndPopulate();
+      // console.log("Service worker is active... beginning initial fetch.");
+      fetchAllAndPopulate();
     }
   }
   
   //  Function gets data from the dbs and populates the chart with the data
-  function initialFetchAndPopulate() {
+  function fetchAllAndPopulate() {
     fetch("/api/transaction/fetchAll")
       .then((response) => {
         return response.json();
@@ -165,10 +165,10 @@ const ready = function () {
     // clear form
     nameEl.value = "";
     amountEl.value = "";
-    console.log(
-      "Currently offline... transaction saved to indexedDB",
-      transaction
-    );
+    // console.log(
+    //   "Currently offline... transaction saved to indexedDB",
+    //   transaction
+    // );
   }
 
   //  Populate functions render data to the HTML
@@ -262,12 +262,12 @@ const ready = function () {
     }
 
     // add to beginning of current array of data
-    transactions.unshift(transaction);
+    // transactions.unshift(transaction);
 
-    // re-run logic to populate ui with new record
-    populateChart();
-    populateTable();
-    populateTotal();
+    // // re-run logic to populate ui with new record
+    // populateChart();
+    // populateTable();
+    // populateTotal();
 
     if (navigator.onLine) {
       // also send to server
@@ -286,6 +286,8 @@ const ready = function () {
           if (data.errors) {
             errorEl.textContent = "Missing Information";
           } else {
+            //  It is important to fetchAll here to update the cache, in case the user immediately goes offline afterwards.
+            fetchAllAndPopulate();
             // clear form
             nameEl.value = "";
             amountEl.value = "";
@@ -299,6 +301,7 @@ const ready = function () {
         });
     } else {
       saveRecord(transaction);
+      fetchAllAndPopulate();
     }
   }
 };

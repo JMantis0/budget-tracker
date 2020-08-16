@@ -20,10 +20,10 @@ const DATA_CACHE = "data-cache-v1";
 
 // install
 self.addEventListener("install", function (evt) {
-  console.log("Attempting to install service worker and cache static assets");
+  // console.log("Attempting to install service worker and cache static assets");
   evt.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
-      console.log("Static files pre-cached successfully!");
+      // console.log("Static files pre-cached successfully!");
       return cache.addAll(FILES_TO_CACHE);
     })
   );
@@ -33,7 +33,7 @@ self.addEventListener("install", function (evt) {
 
 
 self.addEventListener("activate", function (evt) {
-  console.log("Service worker activating")
+  // console.log("Service worker activating")
   evt.waitUntil(
     caches.keys().then((keyList) => {
       return Promise.all(
@@ -52,7 +52,7 @@ self.addEventListener("activate", function (evt) {
 
 self.addEventListener("fetch", function (evt) {
   // cache successful requests to the API
-  console.log("Fetch event for ", evt.request.url);
+
   if (evt.request.url.includes("/api/")) {
     evt.respondWith(
       caches
@@ -62,7 +62,7 @@ self.addEventListener("fetch", function (evt) {
             .then((response) => {
               // If the response was good, clone it and store it in the cache.
               if (response.status === 200) {
-                console.log("Adding to data-cache: url - ", evt.request.url);
+                // console.log("Adding to data-cache: url - ", evt.request.url);
                 cache.put(evt.request.url, response.clone());
               }
               return response;
@@ -82,10 +82,10 @@ self.addEventListener("fetch", function (evt) {
   evt.respondWith(
     caches.match(evt.request).then(function (response) {
       if (response) {
-        console.log("Match found in cache... responding with cache for ", evt.request.url);
+        // console.log("Match found in cache... responding with cache for ", evt.request.url);
         return response
       } else {
-        console.log("No match in cache, fetching ", evt.request.url);
+        // console.log("No match in cache, fetching ", evt.request.url);
         return fetch(evt.request);
       }
     })
