@@ -1,4 +1,3 @@
-# budget-tracker
 # [budget-tracker](https://jbudget-tracker.herokuapp.com/)
 ![GitHub repo size](https://img.shields.io/github/repo-size/JMantis0/budget-tracker)  ![GitHub language count](https://img.shields.io/github/languages/count/JMantis0/budget-tracker)  ![GitHub top language](https://img.shields.io/github/languages/top/JMantis0/budget-tracker)
 
